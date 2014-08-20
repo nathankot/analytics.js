@@ -1,52 +1,96 @@
 
-BROWSERS ?= 'chrome, safari, firefox'
-test = http://localhost:4200
-component = node_modules/component/bin/component
-uglifyjs = node_modules/uglify-js/bin/uglifyjs
-phantomjs = node_modules/.bin/mocha-phantomjs --setting web-security=false --setting local-to-remote-url-access=true
+#
+# Task args.
+#
 
-default build: build/build.js analytics.js
+BROWSER ?= chrome,firefox,safari
+REPORTER ?= spec
+TESTS = $(wildcard test/*.js)
+TEST = test/server
+SRC = $(wildcard lib/*.js)
+MINIFY = $(BINS)/uglifyjs
+PID = test/server/pid.txt
+BINS = node_modules/.bin
+BUILD = build.js
+DUO = $(BINS)/duo
+DUOT = $(BINS)/duo-test
 
-analytics.js: node_modules components $(shell find lib)
-	@$(component) build --standalone analytics --out . --name analytics
-	@$(uglifyjs) analytics.js --output analytics.min.js
+#
+# Default target.
+#
 
-build/build.js: node_modules components $(shell find lib)
-	@$(component) build --dev
+default: test
+
+#
+# Clean.
+#
 
 clean:
-	@rm -rf components build node_modules analytics.js analytics.min.js
+	@-rm -rf components $(BUILD)
+	@-rm analytics.js analytics.min.js
+	@-rm -rf node_modules npm-debug.log
 
-components: component.json
-	@$(component) install --dev
+#
+# update version
+#
 
-kill:
-	-@test ! -s test/server/pid.txt || kill `cat test/server/pid.txt`
-	@rm -f test/server/pid.txt
+version: component.json
+	@node bin/version
+
+#
+# Test with phantomjs.
+#
+
+test: $(BUILD)
+	@$(DUOT) phantomjs $(TEST)
+
+#
+# Test with saucelabs
+#
+
+test-sauce: $(BUILD)
+	@$(DUOT) saucelabs $(TEST) \
+		--reporter $(REPORTER) \
+		--browser $(BROWSER) \
+		--name analytics.js
+
+#
+# Test in the browser.
+#
+# On the link press `cmd + doubleclick`.
+#
+
+test-browser: $(BUILD)
+	@$(DUOT) browser $(TEST) default
+
+#
+# Phony targets.
+#
+
+.PHONY: clean
+.PHONY: test
+.PHONY: test-browser
+.PHONY: test-coverage
+.PHONY: test-sauce
+
+#
+# Target for `analytics.js` file.
+#
+
+analytics.js: node_modules $(SRC) version
+	@$(DUO) --global analytics lib/index.js > analytics.js
+	@$(MINIFY) analytics.js --output analytics.min.js
+
+#
+# Target for `node_modules` folder.
+#
 
 node_modules: package.json
 	@npm install
 
-release: analytics.js test
+#
+# Target for build files.
+#
 
-server: node_modules kill
-	@node test/server/index.js &> /dev/null &
-
-test: node_modules build/build.js server
-	@sleep 1
-	-@$(phantomjs) $(test)
-	@make kill
-
-test-browser: node_modules build/build.js server
-	@sleep 1
-	@open $(test)
-
-coverage: node_modules build/build.js server
-	@sleep 1
-	@open $(test)/coverage
-
-test-sauce: node_modules build/build.js server
-	@sleep 1
-	@BROWSERS=$(BROWSERS) node_modules/.bin/gravy --url $(test)
-
-.PHONY: clean kill release server test test-browser test-sauce
+$(BUILD): $(TESTS) analytics.js
+	@$(DUO) --development test/tests.js > $(BUILD)

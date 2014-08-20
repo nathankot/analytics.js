@@ -1,51 +1,136 @@
 
 describe('user', function () {
 
+  var analytics = window.analytics;
+  var Analytics = analytics.constructor;
   var assert = require('assert');
-  var cookie = require('analytics/lib/cookie');
+  var cookie = Analytics.cookie;
   var equal = require('equals');
-  var json = require('segmentio-json');
-  var store = require('analytics/lib/store');
-  var user = require('analytics/lib/user');
+  var json = require('json');
+  var store = Analytics.store;
+  var user = analytics.user();
+  var User = user.User;
 
   var cookieKey = user._options.cookie.key;
   var localStorageKey = user._options.localStorage.key;
 
   before(function () {
+    assert.equal(location.protocol, user.protocol);
     user.reset();
   });
 
   afterEach(function () {
     user.reset();
     cookie.remove(cookieKey);
+    store.remove(cookieKey);
     store.remove(localStorageKey);
+    user.protocol = location.protocol;
   });
 
+  describe('()', function(){
+    beforeEach(function(){
+      cookie.set(cookieKey, 'my id');
+      store.set(localStorageKey, { trait: true });
+    })
+
+    it('should not reset user id and traits', function(){
+      var user = new User;
+      assert('my id' == user.id());
+      assert(true == user.traits().trait);
+    })
+  })
+
   describe('#id', function () {
-    it('should get an id from the cookie', function () {
-      cookie.set(cookieKey, 'id');
-      assert('id' == user.id());
+    describe('when file:', function(){
+      beforeEach(function(){
+        user.protocol = 'file:';
+      });
+
+      it('should get an id from the store', function () {
+        store.set(cookieKey, 'id');
+        assert('id' == user.id());
+      });
+
+      it('should get an id when not persisting', function () {
+        user.options({ persist: false });
+        user._id = 'id';
+        assert('id' == user.id());
+      });
+
+      it('should set an id to the store', function () {
+        user.id('id');
+        assert('id' === store.get(cookieKey));
+      });
+
+      it('should set the id when not persisting', function () {
+        user.options({ persist: false });
+        user.id('id');
+        assert('id' == user._id);
+      });
+
+      it('should be null by default', function () {
+        assert(null === user.id());
+      });
     });
 
-    it('should get an id when not persisting', function () {
-      user.options({ persist: false });
-      user._id = 'id';
-      assert('id' == user.id());
+    describe('when chrome-extension:', function(){
+      beforeEach(function(){
+        user.protocol = 'chrome-extension:';
+      });
+
+      it('should get an id from the store', function () {
+        store.set(cookieKey, 'id');
+        assert('id' == user.id());
+      });
+
+      it('should get an id when not persisting', function () {
+        user.options({ persist: false });
+        user._id = 'id';
+        assert('id' == user.id());
+      });
+
+      it('should set an id to the store', function () {
+        user.id('id');
+        assert('id' === store.get(cookieKey));
+      });
+
+      it('should set the id when not persisting', function () {
+        user.options({ persist: false });
+        user.id('id');
+        assert('id' == user._id);
+      });
+
+      it('should be null by default', function () {
+        assert(null === user.id());
+      });
     });
 
-    it('should set an id to the cookie', function () {
-      user.id('id');
-      assert('id' === cookie.get(cookieKey));
-    });
+    describe('when http:', function(){
+      it('should get an id from the cookie', function () {
+        cookie.set(cookieKey, 'id');
+        assert('id' == user.id());
+      });
 
-    it('should set the id when not persisting', function () {
-      user.options({ persist: false });
-      user.id('id');
-      assert('id' == user._id);
-    });
+      it('should get an id when not persisting', function () {
+        user.options({ persist: false });
+        user._id = 'id';
+        assert('id' == user.id());
+      });
 
-    it('should be null by default', function () {
-      assert(null === user.id());
+      it('should set an id to the cookie', function () {
+        user.id('id');
+        assert('id' === cookie.get(cookieKey));
+      });
+
+      it('should set the id when not persisting', function () {
+        user.options({ persist: false });
+        user.id('id');
+        assert('id' == user._id);
+      });
+
+      it('should be null by default', function () {
+        assert(null === user.id());
+      });
     });
   });
 

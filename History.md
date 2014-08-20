@@ -1,5 +1,354 @@
 
-1.2.7 / 2014-01-10 
+2.3.13 / 2014-08-20
+==================
+
+ * localstorage fallback: add implementation
+ * localstorage fallback: add tests
+ * rebuild
+ * deps: upgrade to duo 0.7
+ * make: dont clean my npm cache :P
+
+2.3.12 / 2014-08-07
+==================
+
+ * remove userfox
+
+2.3.11 / 2014-08-07
+==================
+
+ * merge a few more fixes (keen.io)
+
+2.3.10 / 2014-07-25
+==================
+
+ * Make lots of analytics.js-integrations fixes
+
+2.3.7 / 2014-07-21
+==================
+
+ * Merge pull request #390 from segmentio/test/element-error
+ * throw helpful error when passing string to `trackLink`, closes #389
+ * Merge pull request #386 from segmentio/context
+ * add integrations select test
+ * add backwards compat options object support
+
+2.3.6 / 2014-07-16
+==================
+
+
+
+2.3.5 / 2014-07-16
+==================
+
+
+
+2.3.4 / 2014-07-16
+==================
+
+
+
+2.3.3 / 2014-07-16
+==================
+
+ * fix: History.md
+
+2.3.2 / 2014-07-13
+==================
+
+* rebuild
+
+2.3.1 / 2014-07-13
+==================
+
+ * deps: remove duo-package
+ * make: test-saucelabs -> test-sauce
+
+2.3.0 / 2014-07-11
+==================
+
+ * use analytics.js-integrations 1.2.0 which removes plugin.Integration
+ * set .analytics on integration instance
+
+2.2.5 / 2014-07-08
+==================
+
+ * loosen deps
+
+2.2.4 / 2014-07-08
+===================
+
+  * rebuild
+
+2.2.3 / 2014-07-07
+===================
+
+  * rebuild
+
+2.2.2 / 2014-06-24
+==================
+
+* fix fxn
+
+2.2.1 / 2014-06-24
+==================
+
+* fix typo
+
+2.2.0 / 2014-06-24
+==================
+
+* bump analytics.js-integrations with bing/bronto fixes
+
+2.1.0 / 2014-06-23
+==================
+
+ * add `.add` for test-friendliness
+ * make-test: kill the server when done testing
+ * tests: add reporter option
+ * update readme
+ * make-test: make sure we use the correct phantomjs(1)
+
+2.0.1 / 2014-06-13
+==================
+
+ * bumping store.js dep to 2.0.0
+ * update readme
+
+2.0.0 / 2014-06-12
+==================
+
+ * converting to use duo
+
+1.5.12 / 2014-06-11
+==================
+
+* bump analytics.js-integrations to 0.9.9
+
+1.5.11 / 2014-06-05
+==================
+
+* bump analytics.js-integrations to 0.9.8
+
+1.5.10 / 2014-06-04
+==================
+
+ * bump analytics.js-integrations to 0.9.7
+
+1.5.9 / 2014-06-04
+==================
+
+ * bump analytics.js-integrations to 0.9.6
+
+1.5.8 / 2014-06-04
+==================
+
+ * bump analytics.js-integrations to 0.9.5
+
+1.5.6 / 2014-06-02
+==================
+
+ * bump analytics.js-integrations to 0.9.3
+
+1.5.5 / 2014-06-02
+==================
+
+ * bump analytics.js-integrations to 0.9.2
+
+1.5.4 / 2014-05-30
+==================
+
+ * upgrade integrations to 0.9.1
+
+1.5.3 / 2014-05-29
+==================
+
+ * upgrade integrations to 0.9.0
+
+1.5.1 / 2014-05-20
+==================
+
+ * update analytics.js-integrations dep for reverting KISSmetrics fixes
+
+1.5.0 / 2014-05-19
+==================
+
+ * updating analytics.js-integrations to 0.8.0 for KISSmetrics fixes
+
+1.4.0 / 2014-05-17
+==================
+
+ * upgrade integrations to 0.7.0
+ * upgrade facade to 0.3.10
+
+1.3.31 / 2014-05-17
+==================
+
+ * handle dev envs correctly, closes #359
+
+1.3.30 / 2014-05-07
+==================
+
+ * upgrade integrations to 0.6.1 for google analytics custom dimensions and metrics
+
+1.3.28 / 2014-04-29
+==================
+
+ * upgrade integrations to 0.5.10 for navilytics fix and mixpanel fix
+ * component: upgrade to 0.19.6 and add githubusercontent to remotes
+
+1.3.26 / 2014-04-17
+==================
+
+ * upgrade integrations to 0.5.8
+
+1.3.25 / 2014-04-16
+==================
+
+ * upgrade integrations to 0.5.6
+
+1.3.24 / 2014-04-15
+==================
+
+ * move analytics.js-integration to dev deps
+
+1.3.23 / 2014-04-14
+==================
+
+ * upgrade integrations to 0.5.5
+ * update querystring to 1.3.0
+
+1.3.22 / 2014-04-11
+==================
+
+ * upgrade integrations to 0.5.4
+
+1.3.21 / 2014-04-10
+==================
+
+ * add "invoke" event
+
+1.3.20 / 2014-04-07
+==================
+
+ * upgrade integrations to 0.5.3
+
+1.3.19 / 2014-04-05
+==================
+
+ * upgrade querystring to 1.2.0
+
+1.3.18 / 2014-04-05
+==================
+
+ * upgrade integrations to 0.5.1
+
+1.3.17 / 2014-04-04
+==================
+
+ * upgrade integrations to 0.5.0
+ * fix: add .search to .url when url is pulled from canonical tag
+ * tests: upgrade gravy to 0.2.0
+
+1.3.16 / 2014-04-01
+==================
+
+ * upgrade integrations to 0.4.14
+
+1.3.15 / 2014-03-26
+==================
+
+ * upgrade integrations to 0.4.13
+
+1.3.14 / 2014-03-26
+==================
+
+ * upgrade integrations to 0.4.12
+
+1.3.13 / 2014-03-25
+==================
+
+ * upgrade integrations to 0.4.11
+
+1.3.12 / 2014-03-19
+==================
+
+ * upgrade integrations to 0.4.10
+
+1.3.11 / 2014-03-14
+===================
+
+ * upgrade integrations to 0.4.9
+
+1.3.10 / 2014-03-14
+===================
+
+ * upgrade integrations to 0.4.8
+
+1.3.9 / 2014-03-14
+==================
+
+ * upgrade integrations to 0.4.7
+
+1.3.8 / 2014-03-13
+==================
+
+ * upgrade integrations to 0.4.6
+
+1.3.7 / 2014-03-06
+==================
+
+ * upgrade integrations to 0.4.5
+ * upgrade facade to 0.2.11
+
+1.3.6 / 2014-03-05
+==================
+
+ * upgrade integrations to 0.4.4
+
+1.3.4 / 2014-02-26
+==================
+
+ * update integrations to 0.4.2
+
+1.3.3 / 2014-02-18
+==================
+
+ * upgrade analytics.js-integrations to 0.4.1
+ * dont reset ids and traits
+
+1.3.2 / 2014-02-07
+==================
+
+ * upgrade analytics.js-integrations to 0.4.0
+ * upgrade analytics.js-integration to 0.1.7
+ * upgrade facade to 0.2.7
+ * fix page url default to check canonical and remove hash
+
+1.3.1 / 2014-01-30
+==================
+
+ * upgrade isodate-traverse to `0.3.0`
+ * upgrade facade to `0.2.4`
+ * upgrade analytics.js-integrations to `0.3.10`
+
+1.3.0 / 2014-01-23
+==================
+
+ * update analytics.js-integrations to 0.3.9
+
+1.2.9 / 2014-01-18
+==================
+
+* update `analytics.js-integrations` to `0.3.8`
+* expose `require()`
+
+1.2.8 / 2014-01-15
+==================
+
+* update `analytics.js-integrations` to `0.3.7`
+* upgrade `facade` to `0.2.3`
+
+1.2.7 / 2014-01-10
 ==================
 
  * update `analytics.js-integrations` to `0.3.6`

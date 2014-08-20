@@ -1,20 +1,21 @@
 
 describe('Analytics', function () {
 
-  var Analytics = require('analytics/lib/analytics');
+  var createIntegration = require('analytics.js-integration');
+  var analytics = window.analytics;
+  var Analytics = analytics.constructor;
   var assert = require('assert');
   var bind = require('event').bind;
-  var cookie = require('analytics/lib/cookie');
+  var cookie = Analytics.cookie;
   var equal = require('equals');
-  var group = require('analytics/lib/group');
+  var group = analytics.group();
   var is = require('is');
   var jQuery = require('jquery');
-  var createIntegration = require('integration');
   var sinon = require('sinon');
-  var store = require('analytics/lib/store');
+  var store = Analytics.store;
   var tick = require('next-tick');
   var trigger = require('trigger-event');
-  var user = require('analytics/lib/user');
+  var user = analytics.user();
   var Facade = require('facade');
   var Identify = Facade.Identify;
   var Group = Facade.Group;
@@ -39,6 +40,10 @@ describe('Analytics', function () {
   afterEach(function () {
     user.reset();
     group.reset();
+    // clear the hash
+    if (window.history && window.history.pushState) {
+      window.history.pushState('', '', window.location.pathname);
+    }
   });
 
   it('should setup an Integrations object', function () {
@@ -106,10 +111,23 @@ describe('Analytics', function () {
       assert(!analytics._readied);
     });
 
-    it('should empty analytics._integrations', function () {
-      analytics._integrations = { Integration: {} };
+    it('should add integration instance', function(done){
+      Test.readyOnInitialize();
+      analytics.addIntegration(Test);
+      analytics.ready(done);
+      var test = new Test(settings.Test);
+      analytics.add(test);
       analytics.initialize();
-      assert(equal(analytics._integrations, {}));
+    });
+
+    it('should set `.analytics` to self on integration', function(done){
+      Test.readyOnInitialize();
+      analytics.addIntegration(Test);
+      analytics.ready(done);
+      var test = new Test(settings.Test);
+      analytics.add(test);
+      analytics.initialize();
+      assert(analytics == test.analytics);
     });
 
     it('should listen on integration ready events', function (done) {
@@ -242,6 +260,24 @@ describe('Analytics', function () {
       analytics._invoke('identify', facade);
       assert(!Test.prototype.invoke.called);
     });
+
+    it('should support .integrations to disable / select integrations', function(){
+      var opts = { integrations: { Test: false } };
+      var facade = new Facade({ options: opts });
+      analytics.identify('123', {}, opts);
+      assert(!Test.prototype.invoke.called);
+    })
+
+    it('should emit "invoke" with facade', function(done){
+      var opts = { All: false };
+      var identify = new Identify({ options: opts });
+      analytics.on('invoke', function(msg){
+        assert(identify == msg);
+        assert('identify' == msg.action());
+        done();
+      });
+      analytics._invoke('identify', identify);
+    })
   });
 
   describe('#_options', function () {
@@ -321,7 +357,36 @@ describe('Analytics', function () {
     it('should call #_invoke with Page instance', function(){
       analytics.page();
       var page = analytics._invoke.args[0][1];
-      assert(page instanceof Page);
+      assert('page' == page.action());
+    })
+
+    it('should default .url to .location.href', function(){
+      analytics.page();
+      var page = analytics._invoke.args[0][1];
+      var href = window.location.href;
+      assert(href == page.properties().url);
+    });
+
+    it('should respect canonical', function(){
+      var el = document.createElement('link');
+      el.rel = 'canonical';
+      el.href = 'baz.com';
+      document.head.appendChild(el);
+      analytics.page();
+      var page = analytics._invoke.args[0][1];
+      assert('baz.com' == page.properties().url);
+      el.parentNode.removeChild(el);
+    });
+
+    it('should append querystring to canonical url', function(){
+      var el = document.createElement('link');
+      el.rel = 'canonical';
+      el.href = 'baz.com';
+      document.head.appendChild(el);
+      analytics.page({ search: '?querystring' });
+      var page = analytics._invoke.args[0][1];
+      assert('baz.com?querystring' == page.properties().url);
+      el.parentNode.removeChild(el);
     })
 
     it('should accept (category, name, properties, options, callback)', function (done) {
@@ -415,7 +480,27 @@ describe('Analytics', function () {
       defaults.property = true;
       analytics.page({ property: true });
       var page = analytics._invoke.args[0][1];
-      assert(true == page.properties().property);
+      assert.deepEqual(defaults, page.properties());
+    });
+
+    it('should accept top level option .timestamp', function(){
+      var date = new Date;
+      analytics.page({ prop: true }, { timestamp: date });
+      var page = analytics._invoke.args[0][1];
+      assert.deepEqual(date, page.timestamp());
+    });
+
+    it('should accept top level option .integrations', function(){
+      analytics.page({ prop: true }, { integrations: { AdRoll: { opt: true } } });
+      var page = analytics._invoke.args[0][1];
+      assert.deepEqual({ opt: true }, page.options('AdRoll'));
+    });
+
+    it('should accept top level option .context', function(){
+      var app = { name: 'segment' };
+      analytics.page({ prop: true }, { context: { app: app } });
+      var page = analytics._invoke.args[0][1];
+      assert.deepEqual(app, page.obj.context.app);
     });
 
     it('should emit page', function (done) {
@@ -461,7 +546,7 @@ describe('Analytics', function () {
     it('should call #_invoke with Identify', function(){
       analytics.identify();
       var identify = analytics._invoke.getCall(0).args[1];
-      assert(identify instanceof Identify);
+      assert('identify' == identify.action());
     })
 
     it('should accept (id, traits, options, callback)', function (done) {
@@ -486,7 +571,7 @@ describe('Analytics', function () {
     it('should accept (id, callback)', function (done) {
       analytics.identify('id', function () {
         var identify = analytics._invoke.getCall(0).args[1];
-        assert(identify instanceof Identify);
+        assert('identify' == identify.action());
         assert('id' == identify.userId());
         done();
       });
@@ -593,6 +678,26 @@ describe('Analytics', function () {
       assert(is.date(created));
       assert(created.getTime() === seconds * 1000);
     });
+
+    it('should accept top level option .timestamp', function(){
+      var date = new Date;
+      analytics.identify(1, { trait: true }, { timestamp: date });
+      var identify = analytics._invoke.args[0][1];
+      assert.deepEqual(date, identify.timestamp());
+    });
+
+    it('should accept top level option .integrations', function(){
+      analytics.identify(1, { trait: true }, { integrations: { AdRoll: { opt: true } } });
+      var identify = analytics._invoke.args[0][1];
+      assert.deepEqual({ opt: true }, identify.options('AdRoll'));
+    });
+
+    it('should accept top level option .context', function(){
+      var app = { name: 'segment' };
+      analytics.identify(1, { trait: true }, { context: { app: app } });
+      var identify = analytics._invoke.args[0][1];
+      assert.deepEqual(app, identify.obj.context.app);
+    });
   });
 
   describe('#user', function () {
@@ -623,7 +728,7 @@ describe('Analytics', function () {
     it('should call #_invoke with group facade instance', function(){
       analytics.group('id');
       var group = analytics._invoke.args[0][1];
-      assert(group instanceof Group);
+      assert('group' == group.action());
     })
 
     it('should accept (id, properties, options, callback)', function (done) {
@@ -725,6 +830,26 @@ describe('Analytics', function () {
       assert(is.date(created));
       assert(created.getTime() === seconds * 1000);
     });
+
+    it('should accept top level option .timestamp', function(){
+      var date = new Date;
+      analytics.group(1, { trait: true }, { timestamp: date });
+      var group = analytics._invoke.args[0][1];
+      assert.deepEqual(date, group.timestamp());
+    });
+
+    it('should accept top level option .integrations', function(){
+      analytics.group(1, { trait: true }, { integrations: { AdRoll: { opt: true } } });
+      var group = analytics._invoke.args[0][1];
+      assert.deepEqual({ opt: true }, group.options('AdRoll'));
+    });
+
+    it('should accept top level option .context', function(){
+      var app = { name: 'segment' };
+      analytics.group(1, { trait: true }, { context: { app: app } });
+      var group = analytics._invoke.args[0][1];
+      assert.deepEqual(app, group.obj.context.app);
+    });
   });
 
   describe('#track', function () {
@@ -740,7 +865,7 @@ describe('Analytics', function () {
     it('should transform arguments into Track', function(){
       analytics.track();
       var track = analytics._invoke.getCall(0).args[1];
-      assert(track instanceof Track);
+      assert('track' == track.action());
     })
 
     it('should accept (event, properties, options, callback)', function (done) {
@@ -790,6 +915,26 @@ describe('Analytics', function () {
       assert(track.properties().date.getTime() === date.getTime());
       assert(track.properties().nonDate === '2013');
     });
+
+    it('should accept top level option .timestamp', function(){
+      var date = new Date;
+      analytics.track('event', { prop: true }, { timestamp: date });
+      var track = analytics._invoke.args[0][1];
+      assert.deepEqual(date, track.timestamp());
+    });
+
+    it('should accept top level option .integrations', function(){
+      analytics.track('event', { prop: true }, { integrations: { AdRoll: { opt: true } } });
+      var track = analytics._invoke.args[0][1];
+      assert.deepEqual({ opt: true }, track.options('AdRoll'));
+    });
+
+    it('should accept top level option .context', function(){
+      var app = { name: 'segment' };
+      analytics.track('event', { prop: true }, { context: { app: app } });
+      var track = analytics._invoke.args[0][1];
+      assert.deepEqual(app, track.obj.context.app);
+    });
   });
 
   describe('#trackLink', function () {
@@ -815,6 +960,15 @@ describe('Analytics', function () {
       analytics.trackLink($link);
       trigger(link, 'click');
       assert(analytics.track.called);
+    });
+
+    it('should not accept a string for an element', function () {
+      var str = 'a';
+      assert.throws(function(){
+        analytics.trackLink(str);
+      }, TypeError, 'Must pass HTMLElement to `analytics.trackLink`.');
+      trigger(link, 'click');
+      assert(!analytics.track.called);
     });
 
     it('should send an event and properties', function () {
@@ -897,6 +1051,15 @@ describe('Analytics', function () {
       assert(analytics.track.called);
     });
 
+    it('should not accept a string for an element', function () {
+      var str = 'form';
+      assert.throws(function(){
+        analytics.trackForm(str);
+      }, TypeError, 'Must pass HTMLElement to `analytics.trackForm`.');
+      trigger(submit, 'click');
+      assert(!analytics.track.called);
+    });
+
     it('should send an event and properties', function () {
       analytics.trackForm(form, 'event', { property: true });
       trigger(submit, 'click');
@@ -968,7 +1131,7 @@ describe('Analytics', function () {
     it('should call #_invoke with instanceof Alias', function(){
       analytics.alias();
       var alias = analytics._invoke.args[0][1];
-      assert(alias instanceof Alias);
+      assert('alias' == alias.action());
     })
 
     it('should accept (new, old, options, callback)', function (done) {
